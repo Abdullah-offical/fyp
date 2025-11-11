@@ -1,0 +1,348 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Home — Blueprint Generator{% endblock %}
+
+{% block content %}
+
+<!-- ***** Header Area End ***** -->
+
+<div class="main-banner">
+  <div class="owl-carousel owl-banner">
+    <div class="item item-1">
+      <div class="header-text">
+        <h2>Generate<br>Your Plot Blueprint Instantly!</h2>
+      </div>
+    </div>
+    <div class="item item-2">
+      <div class="header-text">
+        <h2>Auto<br>Create Your Plot Plan!</h2>
+      </div>
+    </div>
+    <div class="item item-3">
+      <div class="header-text">
+        <h2>Blueprint<br>Your Plot Now!</h2>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="featured section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-4">
+        <div class="left-image">
+          <img src="{% static 'assets/images/featured.jpg' %}" alt="">
+          <a href="generate-blueprint.html"><img src="{% static 'assets/images/featured-icon.png' %}" alt=""
+              style="max-width: 60px; padding: 0px;"></a>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="section-heading">
+          <h6>| Featured</h6>
+          <h2>Design the Best Apartment Blueprint!</h2>
+        </div>
+        <div class="accordion" id="accordionExample">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                aria-expanded="true" aria-controls="collapseOne">
+                Useful Resources
+              </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
+              data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                Discover <strong>smart blueprint</strong> generators for your plots using HTML, CSS, and Bootstrap. Our
+                platform helps you auto-generate professional Blueprint with ease. Explore more <a
+                  href="https://www.google.com/search?q=plot+blueprint+generator+online" target="_blank">free Blueprint
+                  design tools</a> online.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTwo">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                How does this work?
+              </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
+              data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                Simply enter your plot dimensions, and our system will automatically generate a detailed blueprint
+                Blueprint for you. No design skills needed – just input, click, and get your plan ready in seconds!
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingThree">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                Why is this the best blueprint tool?
+              </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree"
+              data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                Our tool provides fast, accurate, and customizable blueprint Blueprint based on your exact plot
+                dimensions. No complex software or design skills needed – just enter your data and get instant results
+                optimized for real-world use.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="info-table">
+          <ul>
+            <li>
+              <img src="{% static 'assets/images/info-icon-01.png' %}" alt="" style="max-width: 52px;">
+              <h4>250 m2<br><span>Total Flat Space</span></h4>
+            </li>
+            <li>
+              <img src="{% static 'assets/images/info-icon-02.png' %}" alt="" style="max-width: 52px;">
+              <h4>Contract<br><span>Contract Ready</span></h4>
+            </li>
+            <li>
+              <img src="{% static '' %}assets/images/info-icon-03.png" alt="" style="max-width: 52px;">
+              <h4>Payment<br><span>Payment Process</span></h4>
+            </li>
+            <li>
+              <img src="{% static 'assets/images/info-icon-04.png' %}" alt="" style="max-width: 52px;">
+              <h4>Safety<br><span>24/7 Under Control</span></h4>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="video section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-4 offset-lg-4">
+        <div class="section-heading text-center">
+          <h6>| Demo Video</h6>
+          <h2>See How Plot Blueprints Are Generated</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="video-content">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 offset-lg-1">
+        <div class="video-frame">
+          <img src="{% static 'assets/images/01.png' %}" alt="">
+          <a href="https://youtube.com" target="_blank"><i class="fa fa-play"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fun-facts">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="wrapper">
+
+          <div class="row">
+            <div class="col-lg-4">
+              <div class="counter">
+                <h2 class="timer count-title count-number" data-to="{{ generated_blueprints|default:0 }}"
+                  data-speed="1000">
+                  {{ generated_blueprints|default:0 }}
+                </h2>
+                <p class="count-text">Blueprints<br>Generated</p>
+              </div>
+            </div>
+
+            <div class="col-lg-4">
+              <div class="counter">
+                <h2 class="timer count-title count-number" data-to="{{ vendors_count|default:0|add:'10' }}"
+                  data-speed="1000">
+                  {{ vendors_count|default:0|add:"10" }}
+                </h2>
+                <p class="count-text">Total<br>of Vendors</p>
+              </div>
+            </div>
+
+            <div class="col-lg-4">
+              <div class="counter">
+                <h2 class="timer count-title count-number" data-to="{{ users_count|default:0|add:'15' }}"
+                  data-speed="1000">
+                  {{ users_count|default:0|add:"15" }}
+                </h2>
+                <p class="count-text">Total<br>Users</p>
+              </div>
+            </div>
+          </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="properties section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-4 offset-lg-4">
+        <div class="section-heading text-center">
+          <h6>| Blueprint</h6>
+          <h2>Choose From Our Best Blueprint to Fit Your Needs</h2>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      {% if featured_blueprints %}
+      {% for bp in featured_blueprints %}
+      <div class="col-lg-4 col-md-6">
+        <div class="item">
+          <a href="{% url 'blueprints:detail' bp.id %}">
+            {% if bp.image %}
+            <img src="{{ bp.image.url }}" alt="{{ bp.title|default:'Blueprint' }}">
+            {% else %}
+            <img src="{% static 'assets/images/placeholder-800x600.png' %}" alt="No image">
+            {% endif %}
+          </a>
+
+          <span class="category">{{ bp.layout_style|default:"Blueprint" }}</span>
+
+          {% if bp.total_area %}
+          <h6>{{ bp.total_area }} sq ft</h6>
+          {% endif %}
+
+          <h4>
+            <a href="{% url 'blueprints:detail' bp.id %}">
+              {{ bp.title|default:"Blueprint #" }}{% if not bp.title %}{{ bp.id }}{% endif %}
+            </a>
+          </h4>
+
+          <ul>
+            <li>Rooms: <span>{{ bp.bedroom_count }}</span></li>
+            <li>Bathrooms: <span>{{ bp.bathroom_count }}</span></li>
+            <li>Area: <span>{% if bp.total_area %}{{ bp.total_area }} sq ft{% else %}—{% endif %}</span></li>
+            <li>Parking: <span>{% if bp.parking_size %}Yes{% else %}No{% endif %}</span></li>
+          </ul>
+
+          <div class="main-button">
+            <a href="{% url 'blueprints:detail' bp.id %}">View Blueprint</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="col-12">
+        <div class="alert alert-info">No admin blueprints available yet.</div>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+
+
+<div class="contact section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-4 offset-lg-4">
+        <div class="section-heading text-center">
+          <h6>| Get In Touch</h6>
+          <h2>Contact Us For Custom Blueprint and Blueprint Designs</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="contact-content">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-7">
+        <div id="map">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d29488.22678150242!2d55.274283284591734!3d25.276987440670255!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f35!3m3!1m2!1s0x3e5f5d2c0c7fe41b%3A0x2f0c38b44b204cc6!2sDubai!5e1!3m2!1sen!2sae!4v1642869952544"
+            width="100%" height="500px" frameborder="0"
+            style="border:0; border-radius: 10px; box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.15);"
+            allowfullscreen=""></iframe>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="item phone">
+              <img src="{% static 'assets/images/phone-icon.png' %}" alt="" style="max-width: 52px;">
+              <h6>0303-3122145<br><span>Phone Number</span></h6>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="item email">
+              <img src="{% static 'assets/images/email-icon.png' %}" alt="" style="max-width: 52px;">
+              <h6>aj161474@gmail.com<br><span>Business Email</span></h6>
+            </div>
+          </div>
+        </div>
+      </div>
+
+<div class="col-lg-5">
+      <form id="contact-form" action="" method="post">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-lg-12">
+            <fieldset>
+              <label for="name">Full Name</label>
+              <input type="text" name="name" id="name" placeholder="Your Name..." required
+                value="{{ contact_form.data.name|default_if_none:'' }}">
+            </fieldset>
+          </div>
+          <div class="col-lg-12">
+            <fieldset>
+              <label for="email">Email Address</label>
+              <input type="email" name="email" id="email" placeholder="Your E-mail..." required
+                value="{{ contact_form.data.email|default_if_none:'' }}">
+            </fieldset>
+          </div>
+          <div class="col-lg-12">
+            <fieldset>
+              <label for="subject">Subject</label>
+              <input type="text" name="subject" id="subject" placeholder="Subject..." required
+                value="{{ contact_form.data.subject|default_if_none:'' }}">
+            </fieldset>
+          </div>
+          <div class="col-lg-12">
+            <fieldset>
+              <label for="message">Message</label>
+              <textarea name="message" id="message" placeholder="Your Message"
+                required>{{ contact_form.data.message }}</textarea>
+            </fieldset>
+          </div>
+          <div class="col-lg-12">
+            <fieldset>
+              <button type="submit" id="form-submit" class="orange-button">Send Message</button>
+            </fieldset>
+          </div>
+        </div>
+      </form>
+</div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+</body>
+
+</html>

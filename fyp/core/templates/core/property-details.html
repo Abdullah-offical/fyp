@@ -1,0 +1,101 @@
+
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Plot Details{% endblock %}
+
+{% block content %}
+
+  <div class="properties section">
+  <div class="container">
+
+    {# Heading (optional) #}
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="section-heading text-center">
+          <h6>Blueprints</h6>
+          <h2>All Approved Experts Blueprints</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      {% if page_obj.object_list %}
+        {% for bp in page_obj %}
+          <div class="col-lg-4 col-md-6">
+            <div class="item">
+              <a href="{% url 'blueprints:detail' bp.id %}">
+                {% if bp.image %}
+                  <img src="{{ bp.image.url }}" alt="{{ bp.title|default:'Blueprint' }}">
+                {% else %}
+                  <img src="{% static 'assets/images/placeholder-800x600.png' %}" alt="No image">
+                {% endif %}
+              </a>
+
+              <span class="category">{{ bp.layout_style|default:"Blueprint" }}</span>
+              {# Optional price line removed; use total area or title instead #}
+              {% if bp.total_area %}
+                <h6>{{ bp.total_area }} sq ft</h6>
+              {% endif %}
+              <h4>
+                <a href="{% url 'blueprints:detail' bp.id %}">
+                  {{ bp.title|default:"Blueprint #"|add:bp.id }}
+                </a>
+              </h4>
+
+              <ul>
+                <li>Rooms: <span>{{ bp.bedroom_count }}</span></li>
+                <li>Bathrooms: <span>{{ bp.bathroom_count }}</span></li>
+                <li>Area: <span>{% if bp.total_area %}{{ bp.total_area }} sq ft{% else %}—{% endif %}</span></li>
+                <li>Owner: <span>{{ bp.owner.username }}</span></li>
+              </ul>
+
+              <div class="main-button">
+                <a href="{% url 'blueprints:detail' bp.id %}">View Blueprint</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12">
+          <div class="alert alert-info">No blueprints available yet.</div>
+        </div>
+      {% endif %}
+    </div>
+
+    {# Pagination #}
+    {% if page_obj.paginator.num_pages > 1 %}
+      <div class="row mt-3">
+        <div class="col-12 d-flex justify-content-center">
+          <nav aria-label="Pagination">
+            <ul class="pagination">
+              {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+              {% endif %}
+
+              {% for i in page_obj.paginator.page_range %}
+                {% if i == page_obj.number %}
+                  <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                  <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                {% endif %}
+              {% endfor %}
+
+              {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+
+{% endblock %}
+  
