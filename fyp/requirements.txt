@@ -22,3 +22,5 @@ urllib3==2.5.0
 user-agents==2.2.0
 yarl==1.20.1
 dj-database-url==3.0.1
+whitenoise==6.11.0
+gunicorn==23.0.0
