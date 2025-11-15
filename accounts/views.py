@@ -73,6 +73,19 @@ def resend_verification_view(request):
         return render(request, 'accounts/verification_sent.html', {'email': user.email})
     return render(request, 'accounts/resend.html')
 
+# def login_view(request):
+#     if request.method == 'POST':
+#         form = LoginForm(request.POST)
+#         if form.is_valid():
+#             user = form.get_user()
+#             login(request, user)
+#             messages.success(request, f"Welcome, {user.username}!")
+#             return redirect('accounts:dashboard')
+#     else:
+#         form = LoginForm()
+#     return render(request, 'accounts/login.html', {'form': form})
+
+
 def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
@@ -80,10 +93,25 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, f"Welcome, {user.username}!")
-            return redirect('accounts:dashboard')
+
+            # ----- ROLE-BASED REDIRECT -----
+            if user.is_superuser or user.role == "ADMIN":
+                return redirect('accounts:dashboard')   # admin dashboard
+
+            elif user.role == "VENDOR":
+                return redirect('accounts:dashboard')   # vendor dashboard
+
+            else:
+                # Normal USER
+                return redirect('core:home')   # go to home page
+            # --------------------------------
+
     else:
         form = LoginForm()
+
     return render(request, 'accounts/login.html', {'form': form})
+
+
 
 def logout_view(request):
     logout(request)
