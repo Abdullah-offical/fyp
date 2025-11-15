@@ -88,8 +88,12 @@ LOGIN_ACTIVITY_ADMIN_EMAIL = env("LOGIN_ACTIVITY_ADMIN_EMAIL")
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # GeoIP
 GEOIP_PATH = BASE_DIR / "geoip"
+
+# Tell WhiteNoise to serve compressed, versioned files
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
