@@ -10,6 +10,16 @@ from django.utils import timezone
 from .forms import RegisterForm, LoginForm
 from .models import EmailVerificationToken, User, Roles
 
+
+# payment
+import stripe
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse, HttpResponse
+from .models import Subscription
+from django.contrib.auth.decorators import login_required
+
+
 def _send_verification_email(request, user: User):
     token = EmailVerificationToken.objects.create(user=user)
     verify_url = request.build_absolute_uri(
@@ -94,21 +104,22 @@ def login_view(request):
             login(request, user)
             messages.success(request, f"Welcome, {user.username}!")
 
-            # ----- ROLE-BASED REDIRECT -----
+            # Admin
             if user.is_superuser or user.role == "ADMIN":
-                return redirect('accounts:dashboard')   # admin dashboard
+                return redirect('accounts:dashboard')
 
-            elif user.role == "VENDOR":
-                return redirect('accounts:dashboard')   # vendor dashboard
+            # Vendor
+            if user.role == "VENDOR":
+                return redirect('blueprints:vendor_dashboard')
 
-            else:
-                # Normal USER
-                return redirect('core:home')   # go to home page
-            # --------------------------------
+            # Normal user → if no active subscription, go to billing
+            sub, _ = Subscription.objects.get_or_create(user=user)
+            if sub.status not in ["trialing", "active"]:
+                return redirect('accounts:billing')
 
+            return redirect('core:home')
     else:
         form = LoginForm()
-
     return render(request, 'accounts/login.html', {'form': form})
 
 
@@ -130,3 +141,105 @@ def dashboard_view(request):
         role_msg = "User Dashboard"
         
     return render(request, 'accounts/dashboard.html', {'role_msg': role_msg})
+
+
+# paymrnts
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+@login_required
+def billing_portal(request):
+    # try to get or create subscription row
+    sub, created = Subscription.objects.get_or_create(user=request.user)
+
+    context = {
+        "subscription": sub,
+        "stripe_pk": settings.STRIPE_PUBLISHABLE_KEY,
+    }
+    return render(request, "accounts/billing.html", context)
+
+
+@login_required
+def create_checkout_session(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+
+    sub, created = Subscription.objects.get_or_create(user=request.user)
+
+    # Create or reuse Stripe customer
+    if sub.stripe_customer_id:
+        customer_id = sub.stripe_customer_id
+    else:
+        customer = stripe.Customer.create(
+            email=request.user.email or None,
+            name=request.user.username,
+        )
+        customer_id = customer.id
+        sub.stripe_customer_id = customer_id
+        sub.save(update_fields=["stripe_customer_id"])
+
+    # One-time $1 verification charge in TEST MODE
+    stripe.PaymentIntent.create(
+        amount=100,             # $1.00
+        currency="usd",
+        customer=customer_id,
+        description="Card verification charge (test mode)",
+        payment_method_types=["card"],
+    )
+
+    # Subscription checkout (with 30-day trial defined in Price)
+    checkout_session = stripe.checkout.Session.create(
+        customer=customer_id,
+        success_url=request.build_absolute_uri(reverse("accounts:billing")) + "?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url=request.build_absolute_uri(reverse("accounts:billing")),
+        mode="subscription",
+        line_items=[{
+            "price": settings.STRIPE_PRICE_ID,
+            "quantity": 1,
+        }],
+    )
+
+    return JsonResponse({"id": checkout_session.id})
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret
+        )
+    except ValueError:
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError:
+        return HttpResponse(status=400)
+
+    # Handle subscription events
+    if event["type"] in ["customer.subscription.updated", "customer.subscription.created"]:
+        sub_data = event["data"]["object"]
+        stripe_sub_id = sub_data["id"]
+        status = sub_data["status"]
+        current_period_end = sub_data["current_period_end"]
+
+        try:
+            sub = Subscription.objects.get(stripe_subscription_id=stripe_sub_id)
+        except Subscription.DoesNotExist:
+            # maybe first time – try to attach by customer id
+            customer_id = sub_data["customer"]
+            sub = Subscription.objects.filter(stripe_customer_id=customer_id).first()
+            if sub:
+                sub.stripe_subscription_id = stripe_sub_id
+
+        if sub:
+            from datetime import datetime
+            sub.status = status
+            sub.current_period_end = datetime.fromtimestamp(current_period_end)
+            sub.save()
+
+    return HttpResponse(status=200)
+
+
+

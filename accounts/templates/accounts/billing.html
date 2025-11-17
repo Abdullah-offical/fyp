@@ -1,0 +1,50 @@
+{% extends "core/base.html" %}
+{% block title %}Billing – SmartArchitecture{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:700px;">
+  <h2 class="mb-3">SmartArchitecture – Subscription</h2>
+
+  {% if subscription.status == "active" or subscription.status == "trialing" %}
+    <div class="alert alert-success">
+      ✅ Your subscription is <strong>{{ subscription.status }}</strong>.
+      {% if subscription.current_period_end %}
+        Next billing date: {{ subscription.current_period_end|date:"d M Y" }}
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="alert alert-warning">
+      You currently don't have an active subscription.
+      Start your <strong>1-month free trial</strong>, then pay monthly.
+    </div>
+
+    <button id="checkout-button" class="btn btn-primary">
+      Start Free Month
+    </button>
+  {% endif %}
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const stripe = Stripe("{{ stripe_pk }}");
+
+  const button = document.getElementById("checkout-button");
+  if (button) {
+    button.addEventListener("click", function () {
+      fetch("{% url 'accounts:create_checkout_session' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.id) {
+          return stripe.redirectToCheckout({ sessionId: data.id });
+        } else {
+          alert("Error creating Checkout Session");
+        }
+      });
+    });
+  }
+</script>
+{% endblock %}
