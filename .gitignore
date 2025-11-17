@@ -23,7 +23,7 @@ dist/
 build/
 eggs/
 
-
+geoip/
 
 # Python cache
 __pycache__/
