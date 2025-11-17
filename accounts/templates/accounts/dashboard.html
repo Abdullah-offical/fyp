@@ -1,0 +1,23 @@
+{% extends "accounts/base.html" %}
+{% block content %}
+<h1>{{ role_msg }}</h1>
+
+{% if user.role == "VENDOR" %}
+  <p class="muted">Vendor tools:</p>
+  <div class="row" style="gap:.5rem;">
+    <a class="btn" href="{% url 'blueprints:vendor_list' %}">My Datasets</a>
+    <a class="btn" href="{% url 'blueprints:vendor_create' %}">Create Dataset</a>
+  </div>
+{% endif %}
+
+{% if user.is_superuser or user.role == "ADMIN" %}
+  <p class="muted" style="margin-top:1rem;">Admin:</p>
+  <div class="row" style="gap:.5rem;">
+    <a class="btn" href="/admin/">Django Admin</a>
+  </div>
+{% endif %}
+
+<div class="row" style="margin-top:1rem;">
+  <a href="{% url 'accounts:logout' %}">Log out</a>
+</div>
+{% endblock %}

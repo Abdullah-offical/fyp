@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+
+
+# Virtual environment:
+# Virtual environment
+venv/
+.venv/
+
+.env
+
+# Python egg files:
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+
+
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local uploads
+media/

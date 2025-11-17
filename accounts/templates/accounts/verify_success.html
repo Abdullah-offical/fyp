@@ -1,0 +1,6 @@
+{% extends "accounts/base.html" %}
+{% block content %}
+<h1>Email verified ✅</h1>
+<p class="muted">Your account is now active. You can log in.</p>
+<a href="{% url 'accounts:login' %}">Go to login</a>
+{% endblock %}

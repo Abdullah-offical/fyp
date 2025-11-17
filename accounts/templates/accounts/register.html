@@ -1,0 +1,23 @@
+{% extends "accounts/base.html" %}
+{% block content %}
+<h1>Create Account</h1>
+<p class="muted">Choose role <b>User</b> or <b>Vendor</b>. A verification email will be sent.</p>
+<form method="post">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {{ form.username.errors }}<input name="username" placeholder="Username" value="{{ form.username.value|default:'' }}">
+  {{ form.email.errors }}<input type="email" name="email" placeholder="Email" value="{{ form.email.value|default:'' }}">
+  <select name="role">
+    {% for val,label in form.fields.role.choices %}
+      <option value="{{ val }}" {% if form.role.value == val %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  {{ form.password1.errors }}<input type="password" name="password1" placeholder="Password">
+  {{ form.password2.errors }}<input type="password" name="password2" placeholder="Confirm Password">
+  <button type="submit">Sign Up</button>
+</form>
+<div class="row">
+  <span class="muted">Already have an account?</span>
+  <a href="{% url 'accounts:login' %}">Log in</a>
+</div>
+{% endblock %}

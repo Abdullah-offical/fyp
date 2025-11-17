@@ -1,0 +1,139 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block title %}Blueprint #{{ obj.id }}{% endblock %}
+
+{% block content %}
+<div class="section best-deal">
+  <div class="container">
+
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="section-heading text-center">
+          <h2 class="mb-3">
+            {{ obj.title|default:"Blueprint #" }}{% if not obj.title %}{{ obj.id }}{% endif %} - Plot
+          </h2>
+          {% if obj.plot_width and obj.plot_height %}
+            <p class="text-muted">
+              Size: {{ obj.plot_width|floatformat:"-2" }} × {{ obj.plot_height|floatformat:"-2" }} {{ obj.plot_unit|default:"ft" }}
+            </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="tabs-content">
+          <div class="row">
+            <div class="tab-content" id="myTabContent">
+              <div class="tab-pane fade show active" id="appartment" role="tabpanel" aria-labelledby="appartment-tab">
+                <div class="row">
+
+                  <!-- LEFT: quick facts -->
+                  <div class="col-lg-3">
+                    <div class="info-table">
+                      <ul>
+                        <li>Bedrooms <span>{{ obj.bedroom_count }}</span></li>
+                        <li>Bathrooms <span>{{ obj.bathroom_count }}</span></li>
+
+                        <li>Living Room <span>{% if obj.living_size %}1{% else %}0{% endif %}</span></li>
+                        <li>Open Kitchen <span>{% if obj.kitchen_size %}1{% else %}0{% endif %}</span></li>
+                        <li>Dining <span>{% if obj.dining_size %}1{% else %}0{% endif %}</span></li>
+                        <li>Hall <span>{% if obj.hall_size %}1{% else %}0{% endif %}</span></li>
+                        <li>Drawing Room <span>{% if obj.drawing_room_size %}1{% else %}0{% endif %}</span></li>
+                        <li>Wash Area <span>{% if obj.wash_area_size %}1{% else %}0{% endif %}</span></li>
+                        <li>O.T.S <span>{% if obj.ots_size %}1{% else %}0{% endif %}</span></li>
+
+                        <li>Parking <span>{% if obj.parking_size %}1{% else %}0{% endif %}</span></li>
+                        <li>Porch <span>{% if obj.porch_size %}1{% else %}0{% endif %}</span></li>
+                        <li>Utility <span>{% if obj.utility_size %}1{% else %}0{% endif %}</span></li>
+                        <li>Store <span>{% if obj.store_size %}1{% else %}0{% endif %}</span></li>
+
+                        <li>Layout Style <span>{{ obj.layout_style|default:"—" }}</span></li>
+                        <li>Total Area <span>{% if obj.total_area %}{{ obj.total_area }} sq ft{% else %}—{% endif %}</span></li>
+                        <li>Owner <span>{{ obj.owner.username }}</span></li>
+                        <li>Status
+                          <span>
+                            {% if obj.status == "APPROVED" %}
+                              Approved
+                            {% elif obj.status == "REJECTED" %}
+                              Rejected
+                            {% else %}
+                              Pending
+                            {% endif %}
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- CENTER: image -->
+                  <div class="col-lg-6">
+                    {% if obj.image %}
+                      <img src="{{ obj.image.url }}" alt="{{ obj.title|default:'Blueprint' }}" class="img-fluid rounded">
+                    {% else %}
+                      <img src="{% static 'assets/images/placeholder-800x600.png' %}" alt="No image" class="img-fluid rounded">
+                    {% endif %}
+                  </div>
+
+                  <!-- RIGHT: textual description from fields -->
+                  <div class="col-lg-3">
+                    <h4>All Info About Blueprint!</h4>
+
+                    <!-- Bedrooms -->
+                    {% if obj.bedroom1_size %}<p><strong>Bedroom 1:</strong> {{ obj.bedroom1_size }}</p>{% endif %}
+                    {% if obj.bedroom2_size %}<p><strong>Bedroom 2:</strong> {{ obj.bedroom2_size }}</p>{% endif %}
+                    {% if obj.bedroom3_size %}<p><strong>Bedroom 3:</strong> {{ obj.bedroom3_size }}</p>{% endif %}
+                    {% if obj.bedroom4_size %}<p><strong>Bedroom 4:</strong> {{ obj.bedroom4_size }}</p>{% endif %}
+                    {% if obj.bedroom5_size %}<p><strong>Bedroom 5:</strong> {{ obj.bedroom5_size }}</p>{% endif %}
+
+                    <!-- Bathrooms -->
+                    {% if obj.bathroom1_size %}<p><strong>Bathroom 1:</strong> {{ obj.bathroom1_size }}</p>{% endif %}
+                    {% if obj.bathroom2_size %}<p><strong>Bathroom 2:</strong> {{ obj.bathroom2_size }}</p>{% endif %}
+                    {% if obj.bathroom3_size %}<p><strong>Bathroom 3:</strong> {{ obj.bathroom3_size }}</p>{% endif %}
+                    {% if obj.bathroom4_size %}<p><strong>Bathroom 4:</strong> {{ obj.bathroom4_size }}</p>{% endif %}
+                    {% if obj.bathroom5_size %}<p><strong>Bathroom 5:</strong> {{ obj.bathroom5_size }}</p>{% endif %}
+
+                    <!-- Other rooms (existing) -->
+                    {% if obj.living_size %}<p><strong>Living Room:</strong> {{ obj.living_size }}</p>{% endif %}
+                    {% if obj.dining_size %}<p><strong>Dining:</strong> {{ obj.dining_size }}</p>{% endif %}
+                    {% if obj.kitchen_size %}<p><strong>Kitchen:</strong> {{ obj.kitchen_size }}</p>{% endif %}
+                    {% if obj.parking_size %}<p><strong>Parking:</strong> {{ obj.parking_size }}</p>{% endif %}
+                    {% if obj.porch_size %}<p><strong>Porch:</strong> {{ obj.porch_size }}</p>{% endif %}
+                    {% if obj.utility_size %}<p><strong>Utility:</strong> {{ obj.utility_size }}</p>{% endif %}
+                    {% if obj.store_size %}<p><strong>Store:</strong> {{ obj.store_size }}</p>{% endif %}
+
+                    <!-- NEW fields -->
+                    {% if obj.hall_size %}<p><strong>Hall:</strong> {{ obj.hall_size }}</p>{% endif %}
+                    {% if obj.drawing_room_size %}<p><strong>Drawing Room:</strong> {{ obj.drawing_room_size }}</p>{% endif %}
+                    {% if obj.wash_area_size %}<p><strong>Wash Area:</strong> {{ obj.wash_area_size }}</p>{% endif %}
+                    {% if obj.ots_size %}<p><strong>O.T.S:</strong> {{ obj.ots_size }}</p>{% endif %}
+
+                    {% if obj.additional_rooms %}
+                      <p><strong>Additional Rooms:</strong> {{ obj.additional_rooms }}</p>
+                    {% endif %}
+
+                    <div class="icon-button mt-2">
+                      {% if obj.image %}
+                        <a href="{{ obj.image.url }}" download>
+                          <i class="fa fa-download"></i> Download Map
+                        </a>
+                      {% else %}
+                        <span class="text-muted">No image to download</span>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                </div> <!-- /row -->
+              </div> <!-- /tab-pane -->
+            </div> <!-- /tab-content -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

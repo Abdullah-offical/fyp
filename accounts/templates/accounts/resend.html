@@ -1,0 +1,9 @@
+{% extends "accounts/base.html" %}
+{% block content %}
+<h1>Resend verification</h1>
+<form method="post">
+  {% csrf_token %}
+  <input type="email" name="email" placeholder="Your email">
+  <button type="submit">Send Link</button>
+</form>
+{% endblock %}

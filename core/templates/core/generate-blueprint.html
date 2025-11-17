@@ -1,0 +1,148 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Generate — Blueprint Generator{% endblock %}
+
+{% block content %}
+<div class="contact-page section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="section-heading">
+          <h6>Generate Blueprint</h6>
+          <h2>Generate BluePrint for Experts</h2>
+        </div>
+      </div>
+
+      <div class="col-lg-12">
+        <form id="generate-form">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-lg-6 col-md-6">
+              <fieldset>
+                <label for="width">Plot Width</label>
+                <input type="number" step="0.01" name="width" id="width" placeholder="40" required class="form-control">
+              </fieldset>
+            </div>
+            <div class="col-lg-6 col-md-6">
+              <fieldset>
+                <label for="height">Plot Height</label>
+                <input type="number" step="0.01" name="height" id="height" placeholder="60" required class="form-control">
+              </fieldset>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mt-3">
+              <fieldset>
+                <label for="unit" class="form-label">Select Unit</label>
+                <select id="unit" name="unit" class="form-select" required>
+                  <option value="" selected disabled>Choose…</option>
+                  <option value="ft">Feet</option>
+                  <option value="m">Meter</option>
+                </select>
+              </fieldset>
+            </div>
+
+            <div class="col-lg-12 mt-3">
+              <fieldset>
+                <button type="submit" id="form-submit" class="btn btn-primary">Send Generate</button>
+              </fieldset>
+            </div>
+          </div>
+        </form>
+
+        <!-- Progress / result -->
+        <div id="progress-box" class="mt-4" style="display:none;">
+          <div id="step-msg" class="alert alert-info">Starting…</div>
+        </div>
+        <div id="result-box" class="mt-3" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// CSRF helper for AJAX
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+const csrftoken = getCookie('csrftoken');
+
+const form = document.getElementById('generate-form');
+const progressBox = document.getElementById('progress-box');
+const stepMsg = document.getElementById('step-msg');
+const resultBox = document.getElementById('result-box');
+
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+  resultBox.style.display = 'none';
+  resultBox.innerHTML = '';
+
+  const width = parseFloat(document.getElementById('width').value);
+  const height = parseFloat(document.getElementById('height').value);
+
+  if (isNaN(width) || isNaN(height)) {
+    alert('Please enter numeric width and height.');
+    return;
+  }
+
+  // Disable form while "processing"
+  form.querySelector('#form-submit').disabled = true;
+
+  // Show staged progress (3s + 3s + 3s)
+  progressBox.style.display = 'block';
+  stepMsg.className = 'alert alert-info';
+  stepMsg.textContent = 'Converting units…';
+
+  // Stage 1: convert units (simulate)
+  setTimeout(() => {
+    stepMsg.textContent = 'Thinking about best match…';
+
+    // Stage 2: thinking (simulate)
+    setTimeout(() => {
+      stepMsg.textContent = 'Generating result…';
+
+      // Stage 3: call the API while "generating"
+      fetch("{% url 'blueprints:api_search_by_size' %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        // <<< ONLY width & height as requested >>>
+        body: JSON.stringify({ width: width, height: height })
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        setTimeout(() => {
+          form.querySelector('#form-submit').disabled = false;
+          if (data.found) {
+            stepMsg.className = 'alert alert-success';
+            stepMsg.textContent = 'Match found! Redirecting…';
+            window.location.href = "{% url 'blueprints:detail' 0 %}".replace('/0/', `/${data.id}/`);
+          } else {
+            stepMsg.className = 'alert alert-warning';
+            stepMsg.textContent = 'Size not available in database.';
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = `
+              <div class="alert alert-secondary">
+                No blueprint found for <b>${width}X${height}</b> in titles.<br>
+                Please try different dimensions or ask a vendor to upload one.
+              </div>`;
+          }
+        }, 1000); // keep the 3rd stage feel
+      })
+      .catch(err => {
+        form.querySelector('#form-submit').disabled = false;
+        stepMsg.className = 'alert alert-danger';
+        stepMsg.textContent = 'Error while searching. Please try again.';
+        console.error(err);
+      });
+
+    }, 3000); // thinking
+  }, 3000); // converting
+});
+</script>
+
+{% endblock %}

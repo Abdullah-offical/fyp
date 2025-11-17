@@ -1,0 +1,83 @@
+
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}View Blueprint{% endblock %}
+
+{% block content %}
+
+  <div class="section best-deal">
+    <div class="container">
+      <div class="row">
+        
+        <div class="col-lg-12">
+          <div class="tabs-content">
+            <div class="row">
+              
+              <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="appartment" role="tabpanel" aria-labelledby="appartment-tab">
+                  <div class="row">
+                    <div class="col-lg-3">
+                      <div class="info-table">
+                        <ul>
+                          <li>Bedrooms <span> 2</span></li>
+                          <li>Living Room <span> 1</span></li>
+                          <li>Open Kitchen <span>1</span></li>
+                          <li>Bathrooms (attached)<span>2</span></li>
+                          <li>Staircase<span>Yes</span></li>
+                          <li>Entrance<span>Front</span></li>
+                          <li>Windows<span>Each room</span></li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="col-lg-6">
+                      <img src="{% static 'assets/images/01.png' %}" alt="">
+                    </div>
+                    <div class="col-lg-3">
+                      <h4>All Info About Blueprint!</h4>
+                      <p><strong>Bedroom 1:</strong> Approx. size 11 x 12 ft, located in the top-left corner. Attached
+                        bathroom, 1 window, cozy space, ideal for relaxing after a long day.</p>
+
+                      <p><strong>Bedroom 2:</strong> Approx. size 11 x 12 ft, located in the top-right corner. Attached
+                        bathroom, 1 window, great natural light, perfect for guests or family.</p>
+
+                      <p><strong>Living Room:</strong> Approx. size 14 x 14 ft, located at the center of the house.
+                        Entry opens into this room; spacious, open area for gatherings; ideal for chilling and watching
+                        TV.</p>
+
+                      <p><strong>Kitchen:</strong> Approx. size 10 x 9 ft, located at the bottom-right. Open kitchen
+                        layout; modern fixtures; perfect for home chefs; accessible from the living room.</p>
+
+                      <p><strong>Bathroom 1:</strong> Approx. size 5 x 7 ft, inside Bedroom 1. Attached; features basic
+                        fixtures; ensuite privacy for Bedroom 1.</p>
+
+                      <p><strong>Bathroom 2:</strong> Approx. size 5 x 7 ft, inside Bedroom 2. Attached; ensuite for
+                        Bedroom 2; equipped with modern amenities.</p>
+
+                      <p><strong>Staircase:</strong> Approx. size 4 x 10 ft, along the left wall (near kitchen).
+                        Internal stair layout; connects to potential rooftop or upper floor; adjacent to kitchen area.
+                      </p>
+
+                      <p><strong>Main Entrance:</strong> Located at the bottom center. Opens into the living room;
+                        designed for welcoming guests; entry point to open-plan living area.</p>
+
+                      <p><strong>Windows:</strong> One per room. Front and side-facing windows; enhances ventilation and
+                        natural light; ideal for aesthetic views.</p>
+
+                      <div class="icon-button">
+                        <a href="{% static 'assets/images/01.png' %}" download>
+                          <i class="fa fa-download"></i> Download Map
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+{% endblock %}
+  
