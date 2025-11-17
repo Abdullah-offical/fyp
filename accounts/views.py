@@ -143,13 +143,111 @@ def dashboard_view(request):
     return render(request, 'accounts/dashboard.html', {'role_msg': role_msg})
 
 
-# paymrnts
+# # paymrnts
+
+# stripe.api_key = settings.STRIPE_SECRET_KEY
+
+# @login_required
+# def billing_portal(request):
+#     # try to get or create subscription row
+#     sub, created = Subscription.objects.get_or_create(user=request.user)
+
+#     context = {
+#         "subscription": sub,
+#         "stripe_pk": settings.STRIPE_PUBLISHABLE_KEY,
+#     }
+#     return render(request, "accounts/billing.html", context)
+
+
+# @login_required
+# def create_checkout_session(request):
+#     if request.method != "POST":
+#         return JsonResponse({"error": "POST only"}, status=405)
+
+#     sub, created = Subscription.objects.get_or_create(user=request.user)
+
+#     # Create or reuse Stripe customer
+#     if sub.stripe_customer_id:
+#         customer_id = sub.stripe_customer_id
+#     else:
+#         customer = stripe.Customer.create(
+#             email=request.user.email or None,
+#             name=request.user.username,
+#         )
+#         customer_id = customer.id
+#         sub.stripe_customer_id = customer_id
+#         sub.save(update_fields=["stripe_customer_id"])
+
+#     # One-time $1 verification charge in TEST MODE
+#     stripe.PaymentIntent.create(
+#         amount=100,             # $1.00
+#         currency="usd",
+#         customer=customer_id,
+#         description="Card verification charge (test mode)",
+#         payment_method_types=["card"],
+#     )
+
+#     # Subscription checkout (with 30-day trial defined in Price)
+#     checkout_session = stripe.checkout.Session.create(
+#         customer=customer_id,
+#         success_url=request.build_absolute_uri(reverse("accounts:billing")) + "?session_id={CHECKOUT_SESSION_ID}",
+#         cancel_url=request.build_absolute_uri(reverse("accounts:billing")),
+#         mode="subscription",
+#         line_items=[{
+#             "price": settings.STRIPE_PRICE_ID,
+#             "quantity": 1,
+#         }],
+#     )
+
+#     return JsonResponse({"id": checkout_session.id})
+
+
+# @csrf_exempt
+# def stripe_webhook(request):
+#     payload = request.body
+#     sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
+#     endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+
+#     try:
+#         event = stripe.Webhook.construct_event(
+#             payload, sig_header, endpoint_secret
+#         )
+#     except ValueError:
+#         return HttpResponse(status=400)
+#     except stripe.error.SignatureVerificationError:
+#         return HttpResponse(status=400)
+
+#     # Handle subscription events
+#     if event["type"] in ["customer.subscription.updated", "customer.subscription.created"]:
+#         sub_data = event["data"]["object"]
+#         stripe_sub_id = sub_data["id"]
+#         status = sub_data["status"]
+#         current_period_end = sub_data["current_period_end"]
+
+#         try:
+#             sub = Subscription.objects.get(stripe_subscription_id=stripe_sub_id)
+#         except Subscription.DoesNotExist:
+#             # maybe first time – try to attach by customer id
+#             customer_id = sub_data["customer"]
+#             sub = Subscription.objects.filter(stripe_customer_id=customer_id).first()
+#             if sub:
+#                 sub.stripe_subscription_id = stripe_sub_id
+
+#         if sub:
+#             from datetime import datetime
+#             sub.status = status
+#             sub.current_period_end = datetime.fromtimestamp(current_period_end)
+#             sub.save()
+
+#     return HttpResponse(status=200)
+
+
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
-
+# ----------------- BILLING PAGE -----------------
 @login_required
 def billing_portal(request):
-    # try to get or create subscription row
+    # Make sure every user has a subscription row
     sub, created = Subscription.objects.get_or_create(user=request.user)
 
     context = {
@@ -159,14 +257,16 @@ def billing_portal(request):
     return render(request, "accounts/billing.html", context)
 
 
+# ----------------- CREATE CHECKOUT SESSION -----------------
 @login_required
 def create_checkout_session(request):
     if request.method != "POST":
         return JsonResponse({"error": "POST only"}, status=405)
 
+    # 1. Get or create local subscription row
     sub, created = Subscription.objects.get_or_create(user=request.user)
 
-    # Create or reuse Stripe customer
+    # 2. Get or create Stripe customer
     if sub.stripe_customer_id:
         customer_id = sub.stripe_customer_id
     else:
@@ -178,68 +278,99 @@ def create_checkout_session(request):
         sub.stripe_customer_id = customer_id
         sub.save(update_fields=["stripe_customer_id"])
 
-    # One-time $1 verification charge in TEST MODE
-    stripe.PaymentIntent.create(
-        amount=100,             # $1.00
-        currency="usd",
-        customer=customer_id,
-        description="Card verification charge (test mode)",
-        payment_method_types=["card"],
-    )
+    # ⚠️ OPTIONAL: you can remove this block entirely if you don’t
+    # really need the extra $1 verification.
+    #
+    # stripe.PaymentIntent.create(
+    #     amount=100,  # $1.00
+    #     currency="usd",
+    #     customer=customer_id,
+    #     description="Card verification charge (test mode)",
+    #     payment_method_types=["card"],
+    # )
 
-    # Subscription checkout (with 30-day trial defined in Price)
+    # 3. Create Subscription Checkout Session (Price has 1-month trial)
     checkout_session = stripe.checkout.Session.create(
         customer=customer_id,
-        success_url=request.build_absolute_uri(reverse("accounts:billing")) + "?session_id={CHECKOUT_SESSION_ID}",
-        cancel_url=request.build_absolute_uri(reverse("accounts:billing")),
         mode="subscription",
+        payment_method_types=["card"],
         line_items=[{
             "price": settings.STRIPE_PRICE_ID,
             "quantity": 1,
         }],
+        success_url=(
+            request.build_absolute_uri(reverse("accounts:billing"))
+            + "?session_id={CHECKOUT_SESSION_ID}"
+        ),
+        cancel_url=request.build_absolute_uri(reverse("accounts:billing")),
     )
 
     return JsonResponse({"id": checkout_session.id})
 
 
+# ----------------- STRIPE WEBHOOK -----------------
 @csrf_exempt
 def stripe_webhook(request):
     payload = request.body
-    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
+    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE", "")
     endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
 
     try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, endpoint_secret
         )
-    except ValueError:
-        return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError:
+    except (ValueError, stripe.error.SignatureVerificationError):
+        # Invalid payload OR invalid signature
         return HttpResponse(status=400)
 
-    # Handle subscription events
-    if event["type"] in ["customer.subscription.updated", "customer.subscription.created"]:
-        sub_data = event["data"]["object"]
-        stripe_sub_id = sub_data["id"]
-        status = sub_data["status"]
-        current_period_end = sub_data["current_period_end"]
+    # --- 1. When checkout is successful for the first time ---
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+
+        customer_id = session.get("customer")
+        stripe_sub_id = session.get("subscription")
+        if not (customer_id and stripe_sub_id):
+            return HttpResponse(status=200)
+
+        # Find our local Subscription row by customer id
+        sub = Subscription.objects.filter(
+            stripe_customer_id=customer_id
+        ).first()
+        if not sub:
+            return HttpResponse(status=200)
+
+        # Fetch full subscription from Stripe to get status + period end
+        stripe_sub = stripe.Subscription.retrieve(stripe_sub_id)
+
+        from datetime import datetime
+
+        sub.stripe_subscription_id = stripe_sub_id
+        sub.status = stripe_sub["status"]          # active, trialing, etc.
+        sub.current_period_end = datetime.fromtimestamp(
+            stripe_sub["current_period_end"]
+        )
+        sub.save()
+
+    # --- 2. Later updates (renew, cancel, etc.) ---
+    elif event["type"] in [
+        "customer.subscription.updated",
+        "customer.subscription.deleted",
+    ]:
+        stripe_sub = event["data"]["object"]
+        stripe_sub_id = stripe_sub["id"]
 
         try:
             sub = Subscription.objects.get(stripe_subscription_id=stripe_sub_id)
         except Subscription.DoesNotExist:
-            # maybe first time – try to attach by customer id
-            customer_id = sub_data["customer"]
-            sub = Subscription.objects.filter(stripe_customer_id=customer_id).first()
-            if sub:
-                sub.stripe_subscription_id = stripe_sub_id
+            return HttpResponse(status=200)
 
-        if sub:
-            from datetime import datetime
-            sub.status = status
-            sub.current_period_end = datetime.fromtimestamp(current_period_end)
-            sub.save()
+        from datetime import datetime
+
+        sub.status = stripe_sub["status"]
+        if stripe_sub.get("current_period_end"):
+            sub.current_period_end = datetime.fromtimestamp(
+                stripe_sub["current_period_end"]
+            )
+        sub.save()
 
     return HttpResponse(status=200)
-
-
-
