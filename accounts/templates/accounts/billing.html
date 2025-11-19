@@ -5,7 +5,7 @@
   <h2 class="mb-3">SmartArchitecture – Subscription</h2>
 
   <!-- {% if subscription.status == "active" or subscription.status == "trialing" %} -->
-   {% if subscription.status == "active" or subscription.status == "trialing" or subscription.stripe_customer_id or subscription.stripe_subscription_id %}
+   {% if subscription.stripe_customer_id %}
     <div class="alert alert-success">
       ✅ Your subscription is <strong>{{ subscription.status }}</strong>.
       {% if subscription.current_period_end %}
