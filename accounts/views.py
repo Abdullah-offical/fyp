@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
+from datetime import datetime
 
 from .forms import RegisterForm, LoginForm
 from .models import EmailVerificationToken, User, Roles
@@ -309,6 +310,72 @@ def create_checkout_session(request):
 
 
 # ----------------- STRIPE WEBHOOK -----------------
+# @csrf_exempt
+# def stripe_webhook(request):
+#     payload = request.body
+#     sig_header = request.META.get("HTTP_STRIPE_SIGNATURE", "")
+#     endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+
+#     try:
+#         event = stripe.Webhook.construct_event(
+#             payload, sig_header, endpoint_secret
+#         )
+#     except (ValueError, stripe.error.SignatureVerificationError):
+#         # Invalid payload OR invalid signature
+#         return HttpResponse(status=400)
+
+#     # --- 1. When checkout is successful for the first time ---
+#     if event["type"] == "checkout.session.completed":
+#         session = event["data"]["object"]
+
+#         customer_id = session.get("customer")
+#         stripe_sub_id = session.get("subscription")
+#         if not (customer_id and stripe_sub_id):
+#             return HttpResponse(status=200)
+
+#         # Find our local Subscription row by customer id
+#         sub = Subscription.objects.filter(
+#             stripe_customer_id=customer_id
+#         ).first()
+#         if not sub:
+#             return HttpResponse(status=200)
+
+#         # Fetch full subscription from Stripe to get status + period end
+#         stripe_sub = stripe.Subscription.retrieve(stripe_sub_id)
+
+#         from datetime import datetime
+
+#         sub.stripe_subscription_id = stripe_sub_id
+#         sub.status = stripe_sub["status"]          # active, trialing, etc.
+#         sub.current_period_end = datetime.fromtimestamp(
+#             stripe_sub["current_period_end"]
+#         )
+#         sub.save()
+
+#     # --- 2. Later updates (renew, cancel, etc.) ---
+#     elif event["type"] in [
+#         "customer.subscription.updated",
+#         "customer.subscription.deleted",
+#     ]:
+#         stripe_sub = event["data"]["object"]
+#         stripe_sub_id = stripe_sub["id"]
+
+#         try:
+#             sub = Subscription.objects.get(stripe_subscription_id=stripe_sub_id)
+#         except Subscription.DoesNotExist:
+#             return HttpResponse(status=200)
+
+#         from datetime import datetime
+
+#         sub.status = stripe_sub["status"]
+#         if stripe_sub.get("current_period_end"):
+#             sub.current_period_end = datetime.fromtimestamp(
+#                 stripe_sub["current_period_end"]
+#             )
+#         sub.save()
+
+#     return HttpResponse(status=200)
+
 @csrf_exempt
 def stripe_webhook(request):
     payload = request.body
@@ -320,57 +387,62 @@ def stripe_webhook(request):
             payload, sig_header, endpoint_secret
         )
     except (ValueError, stripe.error.SignatureVerificationError):
-        # Invalid payload OR invalid signature
+        # invalid payload or signature
         return HttpResponse(status=400)
 
-    # --- 1. When checkout is successful for the first time ---
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
+    event_type = event["type"]
+    data = event["data"]["object"]
 
-        customer_id = session.get("customer")
-        stripe_sub_id = session.get("subscription")
-        if not (customer_id and stripe_sub_id):
-            return HttpResponse(status=200)
+    # helper: find our Subscription row & update it
+    def update_subscription(stripe_customer_id=None,
+                            stripe_subscription_id=None,
+                            status=None,
+                            current_period_end=None):
+        sub = None
 
-        # Find our local Subscription row by customer id
-        sub = Subscription.objects.filter(
-            stripe_customer_id=customer_id
-        ).first()
+        # 1) try by subscription id
+        if stripe_subscription_id:
+            sub = Subscription.objects.filter(
+                stripe_subscription_id=stripe_subscription_id
+            ).first()
+
+        # 2) if not found, try by customer id
+        if not sub and stripe_customer_id:
+            sub = Subscription.objects.filter(
+                stripe_customer_id=stripe_customer_id
+            ).first()
+            # first time: attach the subscription id
+            if sub and stripe_subscription_id and not sub.stripe_subscription_id:
+                sub.stripe_subscription_id = stripe_subscription_id
+
         if not sub:
-            return HttpResponse(status=200)
+            return  # nothing to update
 
-        # Fetch full subscription from Stripe to get status + period end
-        stripe_sub = stripe.Subscription.retrieve(stripe_sub_id)
+        if status:
+            sub.status = status
+        if current_period_end:
+            sub.current_period_end = datetime.fromtimestamp(current_period_end)
 
-        from datetime import datetime
+        sub.save()
 
-        sub.stripe_subscription_id = stripe_sub_id
-        sub.status = stripe_sub["status"]          # active, trialing, etc.
-        sub.current_period_end = datetime.fromtimestamp(
-            stripe_sub["current_period_end"]
+    # ---- handle events ----
+
+    # When Stripe creates or updates the subscription
+    if event_type in ("customer.subscription.created",
+                      "customer.subscription.updated"):
+        update_subscription(
+            stripe_customer_id=data["customer"],
+            stripe_subscription_id=data["id"],
+            status=data["status"],
+            current_period_end=data["current_period_end"],
         )
-        sub.save()
 
-    # --- 2. Later updates (renew, cancel, etc.) ---
-    elif event["type"] in [
-        "customer.subscription.updated",
-        "customer.subscription.deleted",
-    ]:
-        stripe_sub = event["data"]["object"]
-        stripe_sub_id = stripe_sub["id"]
+    # When Checkout finishes successfully
+    elif event_type == "checkout.session.completed":
+        update_subscription(
+            stripe_customer_id=data.get("customer"),
+            stripe_subscription_id=data.get("subscription"),
+        )
 
-        try:
-            sub = Subscription.objects.get(stripe_subscription_id=stripe_sub_id)
-        except Subscription.DoesNotExist:
-            return HttpResponse(status=200)
-
-        from datetime import datetime
-
-        sub.status = stripe_sub["status"]
-        if stripe_sub.get("current_period_end"):
-            sub.current_period_end = datetime.fromtimestamp(
-                stripe_sub["current_period_end"]
-            )
-        sub.save()
-
+    # you can log other event types if you want, but not required
     return HttpResponse(status=200)
