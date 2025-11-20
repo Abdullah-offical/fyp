@@ -111,7 +111,7 @@ def login_view(request):
 
             # Vendor
             if user.role == "VENDOR":
-                return redirect('blueprints:vendor_dashboard')
+                return redirect('accounts:dashboard')
 
             # Normal user → if no active subscription, go to billing
             sub, _ = Subscription.objects.get_or_create(user=user)
