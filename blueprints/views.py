@@ -15,6 +15,16 @@ from django.db.models import Q
 from .models import PlotBlueprint, BlueprintStatus
 
 
+
+import json
+import re
+from decimal import Decimal, InvalidOperation
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.db.models import Q
+from .models import PlotBlueprint, BlueprintStatus
+
+
 def is_vendor(user):
     return user.is_authenticated and (user.role == Roles.VENDOR or user.is_superuser)
 
@@ -108,67 +118,6 @@ def _normalize_to_feet(width, height, unit):
     # round for comparison tolerance
     return w.quantize(Decimal("0.01")), h.quantize(Decimal("0.01"))
 
-# @require_POST
-# def api_search_by_size(request):
-#     """
-#     POST JSON: { "width": 40, "height": 60, "unit": "ft"|"m" }
-#     Returns: { "found": true, "id": 12 } or { "found": false }
-#     """
-#     try:
-#         data = json.loads(request.body.decode("utf-8"))
-#     except json.JSONDecodeError:
-#         return JsonResponse({"error": "Invalid JSON"}, status=400)
-
-#     width = data.get("width")
-#     height = data.get("height")
-#     unit = (data.get("unit") or "ft").lower()
-#     if unit not in ("ft", "m"):
-#         return JsonResponse({"error": "Invalid unit"}, status=400)
-
-#     w_ft, h_ft = _normalize_to_feet(width, height, unit)
-#     if w_ft is None or h_ft is None:
-#         return JsonResponse({"error": "Invalid width/height"}, status=400)
-
-#     # Also normalize stored values to feet for comparison:
-#     # We stored plot_unit; convert meters → feet then compare within a small tolerance.
-#     tol = Decimal("0.10")  # +/- 0.10 ft tolerance
-#     candidates = PlotBlueprint.objects.filter(status=BlueprintStatus.APPROVED)
-
-#     best = None
-#     for bp in candidates.iterator():
-#         bp_w = Decimal(str(bp.plot_width or 0))
-#         bp_h = Decimal(str(bp.plot_height or 0))
-#         if bp.plot_unit == "m":
-#             bp_w *= FEET_PER_METER
-#             bp_h *= FEET_PER_METER
-#         bp_w = bp_w.quantize(Decimal("0.01"))
-#         bp_h = bp_h.quantize(Decimal("0.01"))
-
-#         if abs(bp_w - w_ft) <= tol and abs(bp_h - h_ft) <= tol:
-#             best = bp
-#             break
-#         # also match swapped orientation (user may enter width/height reversed)
-#         if abs(bp_h - w_ft) <= tol and abs(bp_w - h_ft) <= tol:
-#             best = bp
-#             break
-
-#     if best:
-#         return JsonResponse({"found": True, "id": best.id})
-#     return JsonResponse({"found": False})
-
-
-
-
-
-
-
-import json
-import re
-from decimal import Decimal, InvalidOperation
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.db.models import Q
-from .models import PlotBlueprint, BlueprintStatus
 
 @require_POST
 def api_search_by_size(request):
