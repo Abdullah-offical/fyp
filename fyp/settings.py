@@ -109,3 +109,10 @@ STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY")
 STRIPE_PRICE_ID = env("STRIPE_PRICE_ID")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET")
 
+# Cloudinary (media files)
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+CLOUDINARY = {
+    "cloud_name": env("CLOUDINARY_CLOUD_NAME", default=""),
+    "api_key": env("CLOUDINARY_API_KEY", default=""),
+    "api_secret": env("CLOUDINARY_API_SECRET", default=""),
+}
