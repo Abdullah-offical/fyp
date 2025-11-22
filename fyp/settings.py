@@ -29,6 +29,8 @@ INSTALLED_APPS = [
     "accounts.apps.AccountsConfig",
     'core',
     "blueprints",
+    "cloudinary", 
+    "cloudinary_storage"
 ]
 
 MIDDLEWARE = [
@@ -107,5 +109,3 @@ STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY")
 STRIPE_PRICE_ID = env("STRIPE_PRICE_ID")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET")
 
-
-# ok 
